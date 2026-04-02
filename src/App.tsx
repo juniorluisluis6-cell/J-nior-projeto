@@ -70,11 +70,21 @@ export default function App() {
 
     const checkConnection = async () => {
       try {
+        // Tenta buscar um ID para validar se a tabela existe e a chave funciona
         const { error } = await supabase.from('requests').select('id').limit(1);
-        if (error) throw error;
+        
+        if (error) {
+          // Se o erro for de tabela não encontrada, avisamos o usuário
+          if (error.code === '42P01') {
+            console.error('Tabela "requests" não encontrada no Supabase.');
+          }
+          throw error;
+        }
+        
         setConnectionStatus('connected');
       } catch (err) {
-        console.error('Supabase connection error:', err);
+        console.error('Erro de conexão Supabase:', err);
+        // Só define como erro se realmente falhar após a tentativa
         setConnectionStatus('error');
       }
     };
