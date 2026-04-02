@@ -1,25 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { Chat } from "./components/Chat";
-import { Rocket, Code, Layout, Smartphone, ChevronRight, Database, MessageSquare, AlertCircle } from "lucide-react";
+import { ProjectForm, ProjectFormData } from "./components/ProjectForm";
+import { Rocket, Code, Layout, Smartphone, ChevronRight, Database, MessageSquare, AlertCircle, Check, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "./lib/supabase";
+import { cn } from "./lib/utils";
 
 export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [projectData, setProjectData] = useState<ProjectFormData | undefined>();
   const [showDashboard, setShowDashboard] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [isConfigured, setIsConfigured] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
 
   useEffect(() => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || url === 'your-supabase-url' || !key || key === 'your-supabase-anon-key') {
+    
+    if (!url || url.includes('your-supabase-url') || !key || key.includes('your-supabase-anon-key')) {
       setIsConfigured(false);
+      setConnectionStatus('error');
+      return;
     }
+
+    const checkConnection = async () => {
+      try {
+        const { error } = await supabase.from('requests').select('id').limit(1);
+        if (error) throw error;
+        setConnectionStatus('connected');
+      } catch (err) {
+        console.error('Supabase connection error:', err);
+        setConnectionStatus('error');
+      }
+    };
+
+    checkConnection();
   }, []);
 
   useEffect(() => {
-    if (showDashboard && isConfigured) {
+    if (connectionStatus === 'connected') {
       const fetchRequests = async () => {
         const { data, error } = await supabase
           .from('requests')
@@ -33,8 +55,23 @@ export default function App() {
         }
       };
       fetchRequests();
+
+      const subscription = supabase
+        .channel('requests_changes')
+        .on('postgres_changes' as any, { event: '*', table: 'requests' }, (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            setRequests(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setRequests(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
     }
-  }, [showDashboard, isConfigured]);
+  }, [connectionStatus]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
@@ -57,53 +94,71 @@ export default function App() {
       </nav>
 
       {showDashboard ? (
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">Pedidos de Projetos</h1>
-            {!isConfigured && (
-              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
-                <AlertCircle size={18} />
-                <span className="text-sm font-medium">Configure o Supabase no menu Settings</span>
-              </div>
-            )}
+        <main className="h-[calc(100vh-64px)] flex flex-col bg-zinc-100 dark:bg-zinc-950">
+          <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-4 overflow-x-auto flex items-center justify-between">
+            <div className="flex gap-4 min-w-max px-2">
+              {requests.map((req) => (
+                <button
+                  key={req.id}
+                  onClick={() => setSelectedRequestId(req.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-3 rounded-2xl transition-all w-24",
+                    selectedRequestId === req.id 
+                      ? "bg-primary/10 ring-2 ring-primary" 
+                      : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold relative">
+                    {req.client_name.charAt(0)}
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full" />
+                  </div>
+                  <span className="text-xs font-medium truncate w-full text-center">{req.client_name}</span>
+                </button>
+              ))}
+              {requests.length === 0 && connectionStatus === 'connected' && (
+                <div className="text-sm text-zinc-500 py-4">Aguardando novos pedidos...</div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4 ml-4">
+              {connectionStatus === 'connected' ? (
+                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 text-xs font-bold">
+                  <Check size={14} />
+                  CONECTADO AO SUPABASE
+                </div>
+              ) : connectionStatus === 'error' ? (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200 text-xs font-bold">
+                  <AlertCircle size={14} />
+                  ERRO DE CONEXÃO
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-zinc-400 bg-zinc-50 px-3 py-1 rounded-full border border-zinc-200 text-xs font-bold">
+                  <Loader2 size={14} className="animate-spin" />
+                  VERIFICANDO...
+                </div>
+              )}
+            </div>
           </div>
-          
-          <div className="grid gap-6">
-            {requests.length === 0 ? (
-              <div className="text-center py-20 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                <p className="text-zinc-500">
-                  {isConfigured 
-                    ? "Nenhum pedido recebido ainda." 
-                    : "Configure o Supabase para visualizar os pedidos."}
-                </p>
+
+          {/* Chat Area */}
+          <div className="flex-1 flex overflow-hidden">
+            {selectedRequestId ? (
+              <div className="flex-1 flex flex-col bg-[#e5ddd5] dark:bg-zinc-950 relative">
+                {/* WhatsApp Background Pattern (Optional) */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]" />
+                
+                <Chat 
+                  requestId={selectedRequestId}
+                  isAdmin={true}
+                  onClose={() => setSelectedRequestId(null)}
+                />
               </div>
             ) : (
-              requests.map((req) => (
-                <div key={req.id} className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg">{req.client_name}</h3>
-                      <p className="text-sm text-zinc-500">{new Date(req.created_at).toLocaleString()}</p>
-                    </div>
-                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-                      Novo Pedido
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de App: {req.app_type}</p>
-                    <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl max-h-40 overflow-y-auto text-xs font-mono">
-                      {JSON.parse(req.chat_history).map((m: any, i: number) => (
-                        <div key={i} className="mb-2">
-                          <span className={m.role === "user" ? "text-blue-500" : "text-green-500"}>
-                            {m.role === "user" ? "Cliente: " : "IA: "}
-                          </span>
-                          {m.text}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))
+              <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
+                <MessageSquare size={64} className="mb-4 opacity-20" />
+                <h2 className="text-xl font-semibold">Selecione uma conversa</h2>
+                <p>Escolha um cliente acima para começar a conversar.</p>
+              </div>
             )}
           </div>
         </main>
@@ -163,13 +218,35 @@ export default function App() {
         </main>
       )}
 
+      {/* Form Overlay */}
+      <AnimatePresence>
+        {isFormOpen && (
+          <ProjectForm 
+            onClose={() => setIsFormOpen(false)} 
+            onComplete={(data) => {
+              setProjectData(data);
+              setIsFormOpen(false);
+            }} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* Chat Overlay */}
       <AnimatePresence>
-        {isChatOpen && <Chat onClose={() => setIsChatOpen(false)} />}
+        {isChatOpen && (
+          <Chat 
+            initialData={projectData}
+            onOpenForm={() => setIsFormOpen(true)}
+            onClose={() => {
+              setIsChatOpen(false);
+              setProjectData(undefined);
+            }} 
+          />
+        )}
       </AnimatePresence>
 
       {/* Floating Chat Button (Mobile) */}
-      {!isChatOpen && !showDashboard && (
+      {!isChatOpen && !isFormOpen && !showDashboard && (
         <button
           onClick={() => setIsChatOpen(true)}
           className="fixed bottom-6 right-6 p-4 bg-primary text-white rounded-full shadow-xl hover:scale-110 transition-transform z-30"
