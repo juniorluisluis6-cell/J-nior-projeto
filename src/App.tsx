@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Chat } from "./components/Chat";
-import { Rocket, Code, Layout, Smartphone, ChevronRight, Database, MessageSquare } from "lucide-react";
-import { motion } from "motion/react";
+import { Rocket, Code, Layout, Smartphone, ChevronRight, Database, MessageSquare, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { supabase } from "./lib/supabase";
 
 export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
+  const [isConfigured, setIsConfigured] = useState(true);
 
   useEffect(() => {
-    if (showDashboard) {
-      fetch("/api/requests")
-        .then(res => res.json())
-        .then(data => setRequests(data))
-        .catch(err => console.error(err));
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!url || url === 'your-supabase-url' || !key || key === 'your-supabase-anon-key') {
+      setIsConfigured(false);
     }
-  }, [showDashboard]);
+  }, []);
+
+  useEffect(() => {
+    if (showDashboard && isConfigured) {
+      const fetchRequests = async () => {
+        const { data, error } = await supabase
+          .from('requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching requests:', error);
+        } else {
+          setRequests(data || []);
+        }
+      };
+      fetchRequests();
+    }
+  }, [showDashboard, isConfigured]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
@@ -39,11 +58,24 @@ export default function App() {
 
       {showDashboard ? (
         <main className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold mb-8">Pedidos de Projetos</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">Pedidos de Projetos</h1>
+            {!isConfigured && (
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+                <AlertCircle size={18} />
+                <span className="text-sm font-medium">Configure o Supabase no menu Settings</span>
+              </div>
+            )}
+          </div>
+          
           <div className="grid gap-6">
             {requests.length === 0 ? (
               <div className="text-center py-20 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                <p className="text-zinc-500">Nenhum pedido recebido ainda.</p>
+                <p className="text-zinc-500">
+                  {isConfigured 
+                    ? "Nenhum pedido recebido ainda." 
+                    : "Configure o Supabase para visualizar os pedidos."}
+                </p>
               </div>
             ) : (
               requests.map((req) => (

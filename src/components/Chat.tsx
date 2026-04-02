@@ -4,6 +4,7 @@ import { Send, User, Bot, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "../lib/utils";
+import { supabase } from "../lib/supabase";
 
 interface Message {
   role: "user" | "model";
@@ -81,15 +82,19 @@ export function Chat({ onClose }: ChatProps) {
 
       // Save to server if it looks like a summary or after a few messages
       if (messages.length > 3) {
-        await fetch("/api/save-request", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            client_name: "Visitante",
-            app_type: userMessage.substring(0, 50),
-            chat_history: [...messages, { role: "user", text: userMessage }, { role: "model", text: aiText }],
-          }),
-        });
+        const { error } = await supabase
+          .from('requests')
+          .insert([
+            {
+              client_name: "Visitante",
+              app_type: userMessage.substring(0, 50),
+              chat_history: JSON.stringify([...messages, { role: "user", text: userMessage }, { role: "model", text: aiText }]),
+            }
+          ]);
+        
+        if (error) {
+          console.error('Error saving to Supabase:', error);
+        }
       }
 
     } catch (error) {
