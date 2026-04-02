@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { GoogleGenAI } from "@google/genai";
-import { Send, User, Bot, Loader2, X, Check, CheckCheck, Menu, Plus, LayoutGrid, ClipboardList, MessageCircle } from "lucide-react";
+import { Send, User, Bot, Loader2, X, Check, CheckCheck, Menu, Plus, LayoutGrid, ClipboardList, MessageCircle, History } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { ProjectFormData } from "./ProjectForm";
+import { PastProjects } from "./PastProjects";
 
 interface Message {
   role: "user" | "model" | "admin";
@@ -27,6 +28,7 @@ export function Chat({ onClose, initialData, requestId, isAdmin = false, onOpenF
   const [isLoading, setIsLoading] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<number | undefined>(requestId);
   const [showMenu, setShowMenu] = useState(false);
+  const [showPastProjects, setShowPastProjects] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load messages if requestId is provided
@@ -158,8 +160,15 @@ export function Chat({ onClose, initialData, requestId, isAdmin = false, onOpenF
         model: "gemini-3-flash-preview",
         contents: [...history, { role: "user", parts: [{ text: userMessage }] }],
         config: {
-          systemInstruction: `Você é um assistente de vendas para Júnior. O cliente quer um ${initialData?.appType || 'App'}. 
-          Ao final, diga: "Obrigado pela requisição, o seu aplicativo será realizado dentro de 24h".`,
+          systemInstruction: `Você é um assistente de vendas para Júnior Luis. 
+          
+          REGRAS IMPORTANTES:
+          1. O aplicativo está conectado à nuvem (Supabase) e todas as conversas são salvas em tempo real.
+          2. Se o cliente disser que quer "falar com o Júnior" ou algo similar, responda: "O Júnior não está online no momento, mas pode deixar sua mensagem aqui que irei encaminhá-la diretamente para ele. Ele responderá assim que possível!"
+          3. Se o cliente estiver fazendo um pedido de app, ajude-o com as perguntas necessárias.
+          4. Mencione que o cliente pode ver "Projetos Anteriores" no menu (+) para conhecer o trabalho do Júnior.
+          5. Ao finalizar um pedido, diga obrigatoriamente: "Obrigado pela requisição, o seu aplicativo será realizado dentro de 24h".
+          6. Mantenha um tom profissional e prestativo.`,
         }
       });
 
@@ -209,6 +218,11 @@ export function Chat({ onClose, initialData, requestId, isAdmin = false, onOpenF
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-4 space-y-2 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat opacity-90"
         >
+          <AnimatePresence>
+            {showPastProjects && (
+              <PastProjects onClose={() => setShowPastProjects(false)} />
+            )}
+          </AnimatePresence>
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -278,6 +292,19 @@ export function Chat({ onClose, initialData, requestId, isAdmin = false, onOpenF
                     <span className="text-sm font-bold text-center">Fazer Pedido do App</span>
                   </button>
                   
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowPastProjects(true);
+                    }}
+                    className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-2xl border border-zinc-200 dark:border-zinc-700 transition-all group"
+                  >
+                    <div className="w-12 h-12 bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <History size={24} />
+                    </div>
+                    <span className="text-sm font-bold text-center">Ver Projetos Anteriores</span>
+                  </button>
+
                   <button
                     onClick={() => handleSend("Gostaria de ver seu portfólio")}
                     className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-2xl border border-zinc-200 dark:border-zinc-700 transition-all group"
