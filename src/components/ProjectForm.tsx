@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { X, ArrowRight, Upload, DollarSign, Tag, Type, Image as ImageIcon } from "lucide-react";
+import { X, ArrowRight, Upload, DollarSign, Tag, Type, Image as ImageIcon, Check } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface ProjectFormProps {
@@ -51,14 +51,14 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
               <Tag size={20} />
               <span className="text-sm font-medium uppercase tracking-wider">Passo 1 de 5</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Que tipo de aplicativo você deseja?</h2>
-            <p className="text-zinc-500 dark:text-zinc-400">Ex: E-commerce, Delivery, Portfólio, Gestão...</p>
+            <h2 className="text-2xl font-bold gold-gradient mb-2">Que tipo de aplicativo você deseja?</h2>
+            <p className="text-zinc-500 text-sm italic">Ex: E-commerce, Delivery, Portfólio, Gestão...</p>
             <input
               autoFocus
               type="text"
               value={formData.appType}
               onChange={(e) => setFormData({ ...formData, appType: e.target.value })}
-              className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-primary outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-lg focus:border-primary outline-none transition-all text-white"
               placeholder="Descreva o tipo..."
             />
           </div>
@@ -70,13 +70,13 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
               <Type size={20} />
               <span className="text-sm font-medium uppercase tracking-wider">Passo 2 de 5</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Qual o nome do aplicativo?</h2>
+            <h2 className="text-2xl font-bold gold-gradient mb-2">Qual o nome do aplicativo?</h2>
             <input
               autoFocus
               type="text"
               value={formData.appName}
               onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
-              className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-primary outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-lg focus:border-primary outline-none transition-all text-white"
               placeholder="Nome da sua marca ou app..."
             />
           </div>
@@ -88,13 +88,13 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
               <ImageIcon size={20} />
               <span className="text-sm font-medium uppercase tracking-wider">Passo 3 de 5</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Qual logotipo você prefere?</h2>
-            <p className="text-zinc-500 dark:text-zinc-400">Descreva sua preferência ou carregue seu logo abaixo.</p>
+            <h2 className="text-2xl font-bold gold-gradient mb-2">Qual logotipo você prefere?</h2>
+            <p className="text-zinc-500 text-sm italic">Descreva sua preferência ou carregue seu logo abaixo.</p>
             <textarea
               autoFocus
               value={formData.logoPreference}
               onChange={(e) => setFormData({ ...formData, logoPreference: e.target.value })}
-              className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-primary outline-none min-h-[100px]"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-lg focus:border-primary outline-none min-h-[120px] transition-all text-white resize-none"
               placeholder="Descreva sua preferência de logo..."
             />
             
@@ -106,18 +106,18 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
               <div className={cn(
-                "border-2 border-dashed rounded-xl p-4 text-center transition-colors flex items-center justify-center gap-3",
-                formData.logoFile ? "border-primary bg-primary/5" : "border-zinc-200 dark:border-zinc-800"
+                "border-2 border-dashed rounded-2xl p-6 text-center transition-all flex items-center justify-center gap-4",
+                formData.logoFile ? "border-primary bg-primary/5" : "border-zinc-800 hover:border-primary/50"
               )}>
                 {formData.logoFile ? (
                   <>
-                    <img src={formData.logoFile} alt="Logo Preview" className="h-10 w-10 rounded object-cover" />
-                    <span className="text-sm font-medium text-primary">Logo carregado com sucesso!</span>
+                    <img src={formData.logoFile} alt="Logo Preview" className="h-12 w-12 rounded-xl object-cover border border-primary/30" />
+                    <span className="text-sm font-bold text-primary">Logo exclusivo carregado!</span>
                   </>
                 ) : (
                   <>
-                    <Upload size={18} className="text-zinc-400" />
-                    <span className="text-sm text-zinc-500">Já tem um logo? Clique para carregar</span>
+                    <Upload size={20} className="text-zinc-600" />
+                    <span className="text-sm text-zinc-500 font-medium">Já possui um logo? Toque para enviar</span>
                   </>
                 )}
               </div>
@@ -131,7 +131,8 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
               <Upload size={20} />
               <span className="text-sm font-medium uppercase tracking-wider">Passo 4 de 5</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Envie uma foto do seu serviço</h2>
+            <h2 className="text-2xl font-bold gold-gradient mb-2">Foto do seu serviço</h2>
+            <p className="text-zinc-500 text-sm italic mb-4">Uma imagem vale mais que mil palavras no mundo digital.</p>
             <div className="relative group">
               <input
                 type="file"
@@ -139,15 +140,23 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
                 onChange={(e) => handleFileChange(e, 'servicePhoto')}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <div className="border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center group-hover:border-primary transition-colors">
+              <div className={cn(
+                "border-2 border-dashed rounded-[2rem] p-12 text-center transition-all",
+                formData.servicePhoto ? "border-primary bg-primary/5" : "border-zinc-800 hover:border-primary/50"
+              )}>
                 {formData.servicePhoto ? (
-                  <img src={formData.servicePhoto} alt="Preview" className="max-h-48 mx-auto rounded-lg shadow-md" />
-                ) : (
-                  <div className="space-y-2">
-                    <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto">
-                      <Upload className="text-zinc-400" />
+                  <div className="relative inline-block">
+                    <img src={formData.servicePhoto} alt="Preview" className="max-h-48 mx-auto rounded-2xl shadow-2xl border border-primary/20" />
+                    <div className="absolute -top-2 -right-2 bg-primary text-black p-1 rounded-full shadow-lg">
+                      <Check size={16} />
                     </div>
-                    <p className="text-zinc-500">Clique ou arraste uma imagem aqui</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                      <ImageIcon className="text-primary" size={32} />
+                    </div>
+                    <p className="text-zinc-500 font-medium">Arraste ou toque para enviar a foto</p>
                   </div>
                 )}
               </div>
@@ -161,15 +170,15 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
               <DollarSign size={20} />
               <span className="text-sm font-medium uppercase tracking-wider">Passo 5 de 5</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Qual o preço do seu serviço?</h2>
+            <h2 className="text-2xl font-bold gold-gradient mb-2">Qual o preço do seu serviço?</h2>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-lg">R$</span>
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary font-bold text-xl">R$</span>
               <input
                 autoFocus
                 type="text"
                 value={formData.servicePrice}
                 onChange={(e) => setFormData({ ...formData, servicePrice: e.target.value })}
-                className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl pl-12 pr-4 py-3 text-lg focus:ring-2 focus:ring-primary outline-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-16 pr-6 py-4 text-xl focus:border-primary outline-none transition-all text-white font-bold"
                 placeholder="0,00"
               />
             </div>
@@ -196,37 +205,37 @@ export function ProjectForm({ onClose, onComplete }: ProjectFormProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
     >
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
-        <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-          <div className="flex gap-1">
+      <div className="bg-black w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden border border-primary/20">
+        <div className="p-6 border-b border-primary/10 flex justify-between items-center bg-zinc-900/50">
+          <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((s) => (
               <div
                 key={s}
                 className={cn(
-                  "h-1.5 w-8 rounded-full transition-all",
-                  s <= step ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
+                  "h-1 w-10 rounded-full transition-all duration-500",
+                  s <= step ? "gold-bg" : "bg-zinc-800"
                 )}
               />
             ))}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-            <X size={20} />
+          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-colors text-zinc-500">
+            <X size={24} />
           </button>
         </div>
 
-        <div className="p-8">
+        <div className="p-10 min-h-[300px] flex flex-col justify-center">
           {renderStep()}
         </div>
 
-        <div className="p-6 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+        <div className="p-8 bg-zinc-900/50 border-t border-primary/10 flex justify-end">
           <button
             onClick={handleNext}
             disabled={!isStepValid()}
-            className="flex items-center gap-2 bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+            className="flex items-center gap-3 gold-bg text-black px-10 py-4 rounded-2xl font-bold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xl shadow-primary/10"
           >
-            {step === 5 ? "Finalizar e Abrir Chat" : "Próximo"}
+            {step === 5 ? "Finalizar Pedido" : "Próximo Passo"}
             <ArrowRight size={20} />
           </button>
         </div>
